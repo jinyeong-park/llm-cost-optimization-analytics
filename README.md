@@ -144,5 +144,5 @@ Source: console.anthropic.com/settings/billing
 ---
 
 ## Author
-Jenny Park
+Jenny Park - 
 Product Analyst / Technical PM — focused on LLM FinOps and data-driven product strategy.
