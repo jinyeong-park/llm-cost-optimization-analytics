@@ -1,0 +1,47 @@
+{
+  "_comment": "Sample Helicone property query response — POST https://api.helicone.ai/v1/property/query",
+  "_how_to_generate": "In production, tag each API call with Helicone-Property-Task-Type header. This response is what you get back when grouping by that property.",
+  "source": "helicone",
+  "period_start": "2026-09-01T00:00:00Z",
+  "period_end":   "2026-09-28T23:59:59Z",
+  "pulled_at":    "2026-09-28T12:00:00Z",
+  "property_key": "task_type",
+  "data": [
+    {
+      "property_value": "simple_qa",
+      "total_requests":       94823,
+      "total_input_tokens":  4267035,
+      "total_output_tokens": 7585840,
+      "total_cost_usd":         7.78,
+      "avg_cost_usd":        0.000082,
+      "avg_latency_ms":          2134
+    },
+    {
+      "property_value": "summarization",
+      "total_requests":       47219,
+      "total_input_tokens":  5433870,
+      "total_output_tokens": 4249710,
+      "total_cost_usd":         4.49,
+      "avg_cost_usd":        0.000095,
+      "avg_latency_ms":          3421
+    },
+    {
+      "property_value": "code_generation",
+      "total_requests":       18432,
+      "total_input_tokens":  2028960,
+      "total_output_tokens": 3502080,
+      "total_cost_usd":         2.63,
+      "avg_cost_usd":        0.000143,
+      "avg_latency_ms":          3892
+    },
+    {
+      "property_value": "reasoning",
+      "total_requests":        9841,
+      "total_input_tokens":   1161238,
+      "total_output_tokens":  1574560,
+      "total_cost_usd":          1.64,
+      "avg_cost_usd":         0.000167,
+      "avg_latency_ms":           4234
+    }
+  ]
+}

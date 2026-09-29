@@ -1,0 +1,114 @@
+run_id,model_label,model_id,task_type,difficulty,quality_score,latency_ms,input_tokens,output_tokens,total_tokens,cost_usd,response_text
+20260928_121611,haiku,claude-haiku-4-5-20251001,classification,easy,1.0,933.4,14,10,24,6.4e-05,The capital of France is Paris.
+20260928_121611,sonnet,claude-sonnet-4-6,classification,easy,1.0,988.7,14,11,25,0.000207,The capital of France is **Paris**.
+20260928_121611,haiku,claude-haiku-4-5-20251001,classification,easy,1.0,727.9,13,36,49,0.000193,"API stands for **Application Programming Interface**.
+
+It's a set of rules and protocols that allows different software applications to communicate with each other and share data or functionality."
+20260928_121611,sonnet,claude-sonnet-4-6,classification,easy,1.0,1602.1,13,47,60,0.000744,"**API** stands for **Application Programming Interface**.
+
+It is a set of rules and protocols that allows different software applications to communicate and interact with each other. APIs define how requests and responses should be made between systems."
+20260928_121611,haiku,claude-haiku-4-5-20251001,classification,easy,1.0,736.2,15,24,39,0.000135,"The iPhone was first released in 2007. It launched on June 29, 2007."
+20260928_121611,sonnet,claude-sonnet-4-6,classification,easy,1.0,1652.9,15,47,62,0.00075,"The iPhone was first released on **June 29, 2007**. It was introduced by Apple co-founder Steve Jobs earlier that year at the Macworld Conference & Expo in January 2007."
+20260928_121611,haiku,claude-haiku-4-5-20251001,summary,medium,0.8,1234.9,95,65,160,0.00042,"# Summary
+
+Marketing Mix Modeling (MMM) is a statistical technique that measures how different marketing tactics influence sales and helps forecast future sales outcomes to optimize ad spending and overall marketing strategy. It analyzes multiple variables affecting sales, including price, distribut"
+20260928_121611,sonnet,claude-sonnet-4-6,summary,medium,1.0,2403.2,95,68,163,0.001305,"Marketing Mix Modeling (MMM) is a statistical technique that helps marketers measure the impact of various marketing tactics—such as price, media, promotions, and economic conditions—on sales. It is used to optimize advertising spend and the overall marketing mix by analyzing these variables to fore"
+20260928_121611,haiku,claude-haiku-4-5-20251001,summary,medium,0.857,1091.4,75,58,133,0.000365,"Large language models are AI systems trained on vast text datasets using transformer architectures that can generate human-like text and perform diverse language tasks like answering questions and writing code. However, they face significant limitations including hallucinations, outdated knowledge, "
+20260928_121611,sonnet,claude-sonnet-4-6,summary,medium,0.857,2087.9,75,73,148,0.00132,"Large language models (LLMs) are AI systems built on transformer architectures and trained on vast text datasets, enabling them to generate human-like text, answer questions, write code, and perform a wide range of language tasks. Despite their capabilities, they come with notable limitations such a"
+20260928_121611,haiku,claude-haiku-4-5-20251001,code_generation,medium,1.0,3790.8,31,512,543,0.002591,"# Python Function for Mean, Median, and Standard Deviation
+
+Here's a complete solution with examples:
+
+```python
+import statistics
+from typing import List, Dict, Union
+
+def calculate_stats(numbers: List[Union[int, float]]) -> Dict[str, float]:
+    """"""
+    Calculate mean, median, and standard deviati"
+20260928_121611,sonnet,claude-sonnet-4-6,code_generation,medium,1.0,7627.1,31,512,543,0.007773,"## Statistical Summary Function
+
+Here's a clean implementation that calculates mean, median, and standard deviation:
+
+```python
+import math
+from typing import Union
+
+def calculate_stats(numbers: list[Union[int, float]]) -> dict[str, float]:
+    """"""
+    Calculate statistical measures for a list of nu"
+20260928_121611,haiku,claude-haiku-4-5-20251001,code_generation,hard,1.0,4586.0,29,512,541,0.002589,"# Simple LRU Cache Implementation using OrderedDict
+
+```python
+from collections import OrderedDict
+from typing import Any, Optional
+
+class LRUCache:
+    """"""
+    A simple Least Recently Used (LRU) Cache implementation using OrderedDict.
+    
+    When the cache reaches its capacity, the least recently"
+20260928_121611,sonnet,claude-sonnet-4-6,code_generation,hard,1.0,7517.1,29,512,541,0.007767,"## LRU Cache Implementation Using OrderedDict
+
+```python
+from collections import OrderedDict
+from typing import Optional
+
+
+class LRUCache:
+    """"""
+    Least Recently Used (LRU) Cache implementation using OrderedDict.
+    
+    - get(key): Returns value if key exists, else -1. Marks key as recently us"
+20260928_121611,haiku,claude-haiku-4-5-20251001,complex_reasoning,medium,0.5,3766.9,76,364,440,0.001896,"# Revenue Impact Analysis
+
+## Current State
+- **Paid Search:** $100K spend × 3.0x ROI = $300K revenue
+- **Podcast:** $20K spend × 8.6x ROI = $172K revenue
+- **Total:** $472K revenue
+
+## After Shifting $10K from Paid Search to Podcast
+
+**Paid Search (reduced to $90K):**
+- $90K × 3.0x = $270K revenue
+"
+20260928_121611,sonnet,claude-sonnet-4-6,complex_reasoning,medium,0.5,10276.7,76,512,588,0.007908,"# Estimating Net Weekly Revenue Change from Budget Shift
+
+## Setting Up the Framework
+
+To solve this, I need to clarify the ROI figures and apply **marginal ROI logic** — the key insight being that the *next dollar* spent on each channel is what matters for a reallocation decision.
+
+---
+
+## The Core"
+20260928_121611,haiku,claude-haiku-4-5-20251001,complex_reasoning,hard,0.75,4652.3,73,374,447,0.001943,"# Difference-in-Differences Analysis
+
+## Setup
+| Region | Pre (Baseline) | Exp (Treatment) | Change |
+|--------|---|---|---|
+| **Treatment** (Email Suppressed) | 120 | 105 | -15 |
+| **Control** (Email Live) | 100 | 98 | -2 |
+
+## DiD Calculation
+
+**DiD Estimate = (Treatment Change) - (Control Change)"
+20260928_121611,sonnet,claude-sonnet-4-6,complex_reasoning,hard,0.75,11433.8,73,512,585,0.007899,"# Difference-in-Differences (DiD) Analysis
+
+## Setting Up the Data
+
+| Region | Pre-Period | Experiment Period | Change (Δ) |
+|--------|-----------|-------------------|------------|
+| **Treatment** (email suppressed) | 120/week | 105/week | **-15/week** |
+| **Control** (email live) | 100/week | 98/we"
+20260928_121611,haiku,claude-haiku-4-5-20251001,complex_reasoning,hard,1.0,6105.0,44,512,556,0.002604,"# Multicollinearity in Marketing Mix Modeling: The Problem and Ridge Solution
+
+## Why Multicollinearity Wrecks Marketing Mix Models
+
+### The Core Problem with OLS
+
+When marketing channels are correlated (e.g., TV and online display ads both spike during holiday seasons), Ordinary Least Squares regre"
+20260928_121611,sonnet,claude-sonnet-4-6,complex_reasoning,hard,0.8,11641.6,44,512,556,0.007812,"# Multicollinearity in Marketing Mix Modeling: The Problem and Ridge Regression Solution
+
+## Why Multicollinearity is Especially Severe in MMM
+
+Marketing channels are **structurally correlated** by design. Media plans coordinate TV with digital display. Seasonality drives all channels up simultaneou"

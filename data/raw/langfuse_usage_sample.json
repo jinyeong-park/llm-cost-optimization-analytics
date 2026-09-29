@@ -1,0 +1,73 @@
+{
+  "_comment": "Aggregated from Langfuse Observations API — GET /api/public/observations?type=GENERATION",
+  "_how_to_generate": "Tag each trace with metadata: {task_type: 'classification'}. Pull observations for the period and groupby metadata.task_type client-side (or use Metrics API v2 with tag filters).",
+  "_sdk_example": "langfuse.generation(name='llm_call', model='claude-haiku-4-5-20251001', metadata={'task_type': 'classification'}, usage={'input': 45, 'output': 82})",
+  "source": "langfuse",
+  "endpoint": "GET /api/public/observations?type=GENERATION&fromStartTime=2025-01-01T00:00:00Z&toStartTime=2025-01-28T23:59:59Z",
+  "aggregated_by": "metadata.task_type",
+  "period_start": "2025-01-01T00:00:00Z",
+  "period_end":   "2025-01-28T23:59:59Z",
+  "pulled_at":    "2025-01-28T12:00:00Z",
+  "data": [
+    {
+      "metadata_task_type":    "classification",
+      "observation_count":      94823,
+      "total_input_tokens":   4267035,
+      "total_output_tokens":  7585840,
+      "total_input_cost":        4.27,
+      "total_output_cost":       3.51,
+      "total_cost_usd":          7.78,
+      "avg_cost_usd":         0.000082,
+      "avg_latency_seconds":     2.134
+    },
+    {
+      "metadata_task_type":    "simple_extraction",
+      "observation_count":      61204,
+      "total_input_tokens":   3672240,
+      "total_output_tokens":  2449680,
+      "total_input_cost":        3.67,
+      "total_output_cost":       2.21,
+      "total_cost_usd":          5.88,
+      "avg_cost_usd":         0.000096,
+      "avg_latency_seconds":     1.873
+    },
+    {
+      "metadata_task_type":    "summary",
+      "observation_count":      47219,
+      "total_input_tokens":   5433870,
+      "total_output_tokens":  4249710,
+      "total_input_cost":        5.43,
+      "total_output_cost":       3.54,
+      "total_cost_usd":          8.97,
+      "avg_cost_usd":         0.000190,
+      "avg_latency_seconds":     3.421
+    },
+    {
+      "metadata_task_type":    "code_generation",
+      "observation_count":      18432,
+      "total_input_tokens":   2028960,
+      "total_output_tokens":  3502080,
+      "total_input_cost":        2.03,
+      "total_output_cost":      14.01,
+      "total_cost_usd":         16.04,
+      "avg_cost_usd":         0.000870,
+      "avg_latency_seconds":     3.892
+    },
+    {
+      "metadata_task_type":    "complex_reasoning",
+      "observation_count":       9841,
+      "total_input_tokens":   1161238,
+      "total_output_tokens":  1574560,
+      "total_input_cost":        1.16,
+      "total_output_cost":       6.30,
+      "total_cost_usd":          7.46,
+      "avg_cost_usd":         0.000758,
+      "avg_latency_seconds":     4.234
+    }
+  ],
+  "meta": {
+    "total_observations": 231519,
+    "total_cost_usd":      46.13,
+    "note": "Langfuse latency field is in seconds as of 2025-01-01"
+  }
+}

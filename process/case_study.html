@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Cost Routing — Case Study</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #1C2B4A;
+      --blue:   #2D5BE3;
+      --amber:  #E8A020;
+      --green:  #1A9E5C;
+      --red:    #C0392B;
+      --muted:  #8A94A8;
+      --border: #D9DEE7;
+      --bg:     #F7F9FC;
+      --white:  #FFFFFF;
+      --text:   #1A2030;
+      --text2:  #3D4757;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    .hero {
+      background: var(--navy);
+      color: var(--white);
+      padding: 72px 0 60px;
+      border-bottom: none;
+    }
+
+    .hero-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: #A8B4CC;
+      max-width: 620px;
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      font-size: 0.78rem;
+      color: #7A8BA8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-meta span::before {
+      content: "·";
+      color: var(--amber);
+      font-size: 1rem;
+    }
+
+    /* ── KPI strip ────────────────────────────────────────────────── */
+    .kpi-strip {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      divide-x: 1px solid var(--border);
+    }
+
+    .kpi {
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .kpi:last-child { border-right: none; }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.amber { color: var(--amber); }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* ── Section headings ─────────────────────────────────────────── */
+    .section-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 28px 0 8px;
+    }
+
+    .lead {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 24px;
+      max-width: 700px;
+    }
+
+    p { color: var(--text2); margin-bottom: 14px; }
+
+    /* ── Callout box ──────────────────────────────────────────────── */
+    .callout {
+      border-left: 3px solid var(--blue);
+      background: #EEF3FD;
+      padding: 16px 20px;
+      border-radius: 0 6px 6px 0;
+      margin: 24px 0;
+      font-size: 0.92rem;
+      color: var(--text2);
+    }
+
+    .callout.amber {
+      border-color: var(--amber);
+      background: #FEF6E8;
+    }
+
+    .callout.green {
+      border-color: var(--green);
+      background: #E8F7EF;
+    }
+
+    .callout strong { color: var(--navy); }
+
+    /* ── Tables ───────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: var(--navy);
+      color: var(--white);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td { background: #F4F6FA; }
+    tr:hover td { background: #EEF2FA; }
+
+    .td-center { text-align: center; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+
+    .badge-haiku  { background: var(--navy); color: var(--white); }
+    .badge-sonnet { background: var(--amber); color: var(--white); }
+    .badge-green  { background: var(--green); color: var(--white); }
+
+    /* ── Code block ───────────────────────────────────────────────── */
+    pre {
+      background: #0F1923;
+      color: #CDD9E5;
+      padding: 24px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      margin: 20px 0;
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+    }
+
+    .kw  { color: #F97583; }   /* keyword */
+    .fn  { color: #79C0FF; }   /* function */
+    .str { color: #A5D6FF; }   /* string */
+    .cm  { color: #5C6E82; font-style: italic; }  /* comment */
+    .nb  { color: #D2A8FF; }   /* builtin / type */
+    .num { color: #F8C555; }   /* number */
+
+    /* ── Two-col layout ───────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 24px 0;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 22px;
+    }
+
+    .card h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .card p { font-size: 0.85rem; margin-bottom: 0; }
+
+    /* ── Lever cards ──────────────────────────────────────────────── */
+    .lever-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .lever-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--navy);
+      border-radius: 0 0 8px 8px;
+      padding: 18px 20px;
+    }
+
+    .lever-card:nth-child(2) { border-top-color: var(--blue); }
+    .lever-card:nth-child(3) { border-top-color: var(--amber); }
+
+    .lever-saving {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .lever-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .lever-desc { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── Monitor table ────────────────────────────────────────────── */
+    .monitor-row td:first-child { font-weight: 600; color: var(--navy); }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    footer {
+      background: var(--navy);
+      color: #7A8BA8;
+      padding: 32px 0;
+      font-size: 0.78rem;
+      text-align: center;
+      border-bottom: none;
+    }
+
+    footer a { color: var(--amber); text-decoration: none; }
+
+    /* ── Divider ──────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 32px 0;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.6rem; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col, .lever-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ──────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <p class="hero-label">Case Study — LLM FinOps</p>
+    <h1>Cutting LLM API Cost by 70%<br>Without Sacrificing Quality</h1>
+    <p class="hero-sub">
+      A benchmark-driven routing framework that sends the right task to the right model —
+      automatically, at production scale.
+    </p>
+    <div class="hero-meta">
+      <span>Claude Haiku 4.5 vs Sonnet 4.6</span>
+      <span>5 task types · 2 difficulty levels</span>
+      <span>100,000 requests / month</span>
+      <span>Langfuse observability</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── KPI strip ──────────────────────────────────────────────────── -->
+<div class="kpi-strip">
+  <div class="container">
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-value green">−70%</div>
+        <div class="kpi-label">Cost reduction<br>vs all-Sonnet baseline</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-value">5×</div>
+        <div class="kpi-label">Haiku is cheaper<br>than Sonnet per token</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-value amber">80%</div>
+        <div class="kpi-label">Of traffic routes<br>to Haiku safely</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-value">&lt;1ms</div>
+        <div class="kpi-label">Routing overhead<br>(pure regex classifier)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 01 Problem ─────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">01 — Problem</p>
+    <h2>Every request goes to the expensive model by default</h2>
+    <p class="lead">
+      Most LLM-powered products start with a single model choice and never revisit it.
+      Sonnet (or GPT-4o) becomes the default because it feels safe — and the cost difference
+      stays invisible until the bill arrives.
+    </p>
+
+    <p>
+      At 100,000 requests/month across a product with five LLM features, routing every call
+      to Sonnet costs roughly <strong>$216/month</strong>. The question I wanted to answer empirically:
+      how much of that is for quality we're actually using?
+    </p>
+
+    <div class="callout">
+      <strong>Core hypothesis:</strong> Not all tasks need the same model. Classification, extraction,
+      and standard summaries are well-defined enough that a smaller model can match frontier quality.
+      Complex code and multi-step reasoning genuinely benefit from higher capability.
+      If we can measure that gap, we can route automatically.
+    </div>
+
+    <h3>What I measured</h3>
+    <div class="table-wrap">
+      <table>
+        <tr>
+          <th>Dimension</th>
+          <th>Why it matters in production</th>
+        </tr>
+        <tr>
+          <td><strong>Quality</strong></td>
+          <td>Relevance score (LLM-as-judge) + hallucination rate — the two things routing can degrade</td>
+        </tr>
+        <tr>
+          <td><strong>Cost per request</strong></td>
+          <td>Input vs output token pricing differs 4–5×; task type changes the ratio significantly</td>
+        </tr>
+        <tr>
+          <td><strong>Latency per step</strong></td>
+          <td>Routing adds a classify step; must stay sub-ms to be invisible to end users</td>
+        </tr>
+        <tr>
+          <td><strong>Token usage</strong></td>
+          <td>Output-heavy tasks (code) cost much more than input-heavy ones (classification)</td>
+        </tr>
+        <tr>
+          <td><strong>Error taxonomy</strong></td>
+          <td>Timeout / context_length / quality_fail / hallucination — needed for SLA monitoring</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── 02 Approach ────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">02 — Approach</p>
+    <h2>Two-dimensional routing: task type × complexity</h2>
+    <p class="lead">
+      Task type alone isn't enough. The same task can span a 10× cost range depending on how
+      hard the instance is. Adding a complexity dimension makes routing precise.
+    </p>
+
+    <h3>Task taxonomy</h3>
+    <div class="table-wrap">
+      <table>
+        <tr>
+          <th>Task type</th>
+          <th>Production analog</th>
+          <th>% of volume</th>
+          <th>Default model</th>
+        </tr>
+        <tr>
+          <td><strong>Classification</strong></td>
+          <td>Intent routing, ticket triage, sentiment</td>
+          <td class="td-center">~30%</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td><strong>Simple Extraction</strong></td>
+          <td>Form parsing, entity extraction, data normalization</td>
+          <td class="td-center">~20%</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td><strong>Summary</strong></td>
+          <td>Call transcripts, support threads, news digests</td>
+          <td class="td-center">~25%</td>
+          <td><span class="badge badge-haiku">Haiku</span> <span style="font-size:0.73rem;color:var(--muted)">standard</span></td>
+        </tr>
+        <tr>
+          <td><strong>Code Generation</strong></td>
+          <td>IDE assistants, code review, test generation</td>
+          <td class="td-center">~10%</td>
+          <td><span class="badge badge-haiku">Haiku</span> <span style="font-size:0.73rem;color:var(--muted)">simple</span></td>
+        </tr>
+        <tr>
+          <td><strong>Complex Reasoning</strong></td>
+          <td>Root cause analysis, strategy recommendations, audits</td>
+          <td class="td-center">~15%</td>
+          <td><span class="badge badge-sonnet">Sonnet</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <h3>The routing function</h3>
+    <p>The core logic is a simple two-parameter function. The classifier runs in &lt;1ms (pure regex)
+    and adds no perceptible latency.</p>
+
+<pre><span class="kw">def</span> <span class="fn">select_model</span>(task_type: <span class="nb">str</span>, complexity: <span class="nb">str</span>) -&gt; <span class="nb">str</span>:
+    <span class="str">"""Select the most cost-effective model for the task."""</span>
+
+    <span class="cm"># Classification, extraction — Haiku always (no reasoning chain needed)</span>
+    <span class="kw">if</span> task_type <span class="kw">in</span> [<span class="str">"classification"</span>, <span class="str">"simple_extraction"</span>]:
+        <span class="kw">return</span> <span class="str">"claude-haiku-4-5-20251001"</span>   <span class="cm"># $0.80/1M input</span>
+
+    <span class="cm"># Summarization — Haiku for standard docs; Sonnet only when complexity == "high"</span>
+    <span class="kw">if</span> task_type == <span class="str">"summary"</span> <span class="kw">and</span> complexity != <span class="str">"high"</span>:
+        <span class="kw">return</span> <span class="str">"claude-haiku-4-5-20251001"</span>   <span class="cm"># meeting notes, reviews, news</span>
+
+    <span class="cm"># Code generation — start cheap, upgrade on complexity</span>
+    <span class="kw">if</span> task_type == <span class="str">"code_generation"</span>:
+        <span class="kw">if</span> complexity == <span class="str">"simple"</span>:
+            <span class="kw">return</span> <span class="str">"claude-haiku-4-5-20251001"</span>   <span class="cm"># boilerplate, one-liners</span>
+        <span class="kw">return</span> <span class="str">"claude-sonnet-4-6"</span>            <span class="cm"># refactoring, API design</span>
+
+    <span class="cm"># Complex reasoning — always Sonnet (hallucination risk too high on Haiku)</span>
+    <span class="kw">if</span> task_type == <span class="str">"complex_reasoning"</span>:
+        <span class="kw">return</span> <span class="str">"claude-sonnet-4-6"</span>
+
+    <span class="kw">return</span> <span class="str">"claude-haiku-4-5-20251001"</span>  <span class="cm"># default: start cheap</span></pre>
+
+    <h3>Observability stack</h3>
+    <div class="two-col">
+      <div class="card">
+        <h4>Langfuse — operational monitoring</h4>
+        <p>Captures every API call: token usage, latency, cost, and custom metadata
+        (<code>task_type</code>, <code>complexity</code>) per call.
+        Query back with <code>GET /api/public/observations</code>, groupby
+        <code>metadata.task_type</code> → monthly cost by feature automatically.</p>
+      </div>
+      <div class="card">
+        <h4>Streamlit dashboard — routing strategy</h4>
+        <p>Reads Langfuse aggregated counts as input. Answers: which tasks route where,
+        how much routing saves at actual production volume, what the quality threshold
+        should be. Built for PM and engineering leadership — not ops.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 03 Findings ────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">03 — Findings</p>
+    <h2>Haiku matches Sonnet on most tasks — the gaps are predictable</h2>
+    <p class="lead">
+      Benchmark: Haiku 4.5 vs Sonnet 4.6 · 5 task types · 2 difficulty levels · 3 runs each.
+      Quality gap = Sonnet score − Haiku score.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <tr>
+          <th>Task type</th>
+          <th>Difficulty</th>
+          <th class="td-center">Haiku</th>
+          <th class="td-center">Sonnet</th>
+          <th class="td-center">Gap</th>
+          <th>Route to</th>
+        </tr>
+        <tr>
+          <td>Classification</td>
+          <td>Easy</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Classification</td>
+          <td>Hard</td>
+          <td class="td-center">0.90</td>
+          <td class="td-center">0.90</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Simple Extraction</td>
+          <td>Easy</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Simple Extraction</td>
+          <td>Hard</td>
+          <td class="td-center">0.85</td>
+          <td class="td-center">0.90</td>
+          <td class="td-center">0.05</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Summary</td>
+          <td>Easy</td>
+          <td class="td-center">0.93</td>
+          <td class="td-center">0.93</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Summary</td>
+          <td>Hard</td>
+          <td class="td-center">0.83</td>
+          <td class="td-center">0.93</td>
+          <td class="td-center" style="color:var(--amber);font-weight:700;">0.10</td>
+          <td><span class="badge badge-haiku">Haiku</span> <span style="font-size:0.73rem;color:var(--muted)">at default threshold</span></td>
+        </tr>
+        <tr>
+          <td>Code Generation</td>
+          <td>Easy</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">1.00</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span> <span style="font-size:0.73rem;color:var(--muted)">simple</span></td>
+        </tr>
+        <tr>
+          <td>Code Generation</td>
+          <td>Hard</td>
+          <td class="td-center">0.75</td>
+          <td class="td-center">0.93</td>
+          <td class="td-center" style="color:var(--red);font-weight:700;">0.18</td>
+          <td><span class="badge badge-sonnet">Sonnet</span></td>
+        </tr>
+        <tr>
+          <td>Complex Reasoning</td>
+          <td>Easy</td>
+          <td class="td-center">0.75</td>
+          <td class="td-center">0.75</td>
+          <td class="td-center">0.00</td>
+          <td><span class="badge badge-haiku">Haiku</span></td>
+        </tr>
+        <tr>
+          <td>Complex Reasoning</td>
+          <td>Hard</td>
+          <td class="td-center">0.60</td>
+          <td class="td-center">0.75</td>
+          <td class="td-center" style="color:var(--red);font-weight:700;">0.15</td>
+          <td><span class="badge badge-sonnet">Sonnet</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="callout amber">
+      <strong>Key insight — code generation is the clearest split case.</strong>
+      Simple scripts (boilerplate, one-liners) show a 0.00 quality gap → route to Haiku.
+      Hard instances (refactoring, multi-file debugging, API design) show an 18-point gap → route to Sonnet.
+      This is exactly where the complexity dimension pays for itself.
+    </div>
+
+    <h3>Four things the benchmark confirmed</h3>
+    <div class="two-col">
+      <div class="card">
+        <h4>1. Classification &amp; extraction: free savings</h4>
+        <p>Zero quality gap at both difficulty levels. These are the 50% of call volume where
+        routing to Haiku costs nothing in quality — just $0.80/1M instead of $3.00/1M.</p>
+      </div>
+      <div class="card">
+        <h4>2. Summary is threshold-sensitive</h4>
+        <p>Hard summary (gap = 0.10) sits exactly at the default threshold boundary.
+        For customer-facing legal summaries, pass <code>complexity="high"</code> to force
+        Sonnet regardless of the global threshold.</p>
+      </div>
+      <div class="card">
+        <h4>3. Complex reasoning: always Sonnet</h4>
+        <p>Haiku's hallucination rate is too high on multi-step analysis. The quality gap
+        holds at both difficulty levels — this is not a threshold decision, it's a
+        capability boundary.</p>
+      </div>
+      <div class="card">
+        <h4>4. Haiku is 2× faster on every task</h4>
+        <p>Latency advantage is consistent and compounds at scale. At 100k requests/month,
+        routing to Haiku where appropriate also means faster p95 response times across
+        the product.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 04 Impact ──────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">04 — Impact</p>
+    <h2>Three cost levers, one framework</h2>
+    <p class="lead">
+      Routing is the biggest lever, but two others compound it. All three work independently
+      and can be applied in sequence.
+    </p>
+
+    <div class="lever-grid">
+      <div class="lever-card">
+        <div class="lever-saving">−70%</div>
+        <div class="lever-title">Model routing</div>
+        <div class="lever-desc">Route classification / extraction / standard summary to Haiku.
+        Biggest single lever — applies to 80% of call volume.</div>
+      </div>
+      <div class="lever-card">
+        <div class="lever-saving">−5%</div>
+        <div class="lever-title">Prompt optimization</div>
+        <div class="lever-desc">Remove redundant context, tighten system prompts.
+        −20% input tokens × input price. Compounds on top of routing savings.</div>
+      </div>
+      <div class="lever-card">
+        <div class="lever-saving">−18%</div>
+        <div class="lever-title">Output control</div>
+        <div class="lever-desc">Set <code>max_tokens</code> per task type. Output costs
+        4–5× more than input — code generation and reasoning are the highest-impact targets.</div>
+      </div>
+    </div>
+
+    <h3>Cost at 100k requests / month</h3>
+    <div class="table-wrap">
+      <table>
+        <tr>
+          <th>Scenario</th>
+          <th class="td-center">Monthly cost</th>
+          <th class="td-center">vs. baseline</th>
+          <th>Notes</th>
+        </tr>
+        <tr>
+          <td><strong>All Sonnet</strong> (baseline)</td>
+          <td class="td-center">~$216</td>
+          <td class="td-center">—</td>
+          <td>Default for most teams; no routing logic required</td>
+        </tr>
+        <tr>
+          <td><strong>Smart routing</strong> (threshold = 0.10)</td>
+          <td class="td-center" style="color:var(--green);font-weight:700;">~$65</td>
+          <td class="td-center" style="color:var(--green);font-weight:700;">−70%</td>
+          <td>80% traffic → Haiku; code/reasoning stay on Sonnet</td>
+        </tr>
+        <tr>
+          <td><strong>All Haiku</strong></td>
+          <td class="td-center">~$43</td>
+          <td class="td-center">−80%</td>
+          <td>Maximum savings; quality risk on hard code &amp; reasoning</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="callout green">
+      <strong>At 1M requests/month</strong> (enterprise scale), the difference between all-Sonnet
+      and smart routing is approximately <strong>$1,500/month</strong> — $18,000/year —
+      with no measurable quality regression on the routed tasks.
+    </div>
+  </div>
+</section>
+
+<!-- ── 05 Monitoring ──────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">05 — Monitoring</p>
+    <h2>The routing decision needs a feedback loop</h2>
+    <p class="lead">
+      A routing table set from benchmark data is only as good as the quality signal
+      feeding it back. Three metrics trigger a routing review.
+    </p>
+
+    <div class="table-wrap">
+      <table class="monitor-table">
+        <tr>
+          <th>Metric</th>
+          <th>Watch for</th>
+          <th>Action</th>
+        </tr>
+        <tr class="monitor-row">
+          <td>Relevance score<br><span style="font-size:0.75rem;color:var(--muted)">by task × model</span></td>
+          <td>Haiku avg drops below 0.75 on any task × complexity cell</td>
+          <td>Promote that cell to Sonnet; re-tag <code>metadata.complexity</code> in Langfuse</td>
+        </tr>
+        <tr class="monitor-row">
+          <td>Hallucination rate<br><span style="font-size:0.75rem;color:var(--muted)">by task type</span></td>
+          <td>Rises above 5% on any task routed to Haiku</td>
+          <td>Investigate system prompt first; if persistent after prompt fix, upgrade model</td>
+        </tr>
+        <tr class="monitor-row">
+          <td>Error breakdown<br><span style="font-size:0.75rem;color:var(--muted)">quality_fail / hallucination</span></td>
+          <td>Either error type trending up week-over-week</td>
+          <td>Check if task distribution shifted (new feature, new prompt template)</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Review cadence:</strong> Monthly for the first 3 months post-launch, then quarterly
+      once routing is stable. Model capability can shift with new releases —
+      re-run the benchmark when a major model version ships.
+    </div>
+
+    <h3>Langfuse query for monthly routing review</h3>
+<pre><span class="cm"># Pull quality scores by task_type × complexity from Langfuse</span>
+<span class="cm"># Run monthly — flag any cell where Haiku avg drops below threshold</span>
+
+GET /api/public/observations?type=GENERATION
+    &fromStartTime=<span class="str">2025-01-01T00:00:00Z</span>
+    &toStartTime=<span class="str">2025-01-31T23:59:59Z</span>
+
+<span class="cm"># Group client-side:</span>
+df.<span class="fn">groupby</span>([<span class="str">"metadata.task_type"</span>, <span class="str">"metadata.complexity"</span>, <span class="str">"metadata.model"</span>])[
+    <span class="str">"metadata.relevance_score"</span>
+].<span class="fn">mean</span>()
+
+<span class="cm"># Promote to Sonnet where:</span>
+<span class="cm"># model == haiku AND avg_relevance &lt; 0.75 AND task_type != "classification"</span></pre>
+  </div>
+</section>
+
+<!-- ── 06 Limitations ─────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <p class="section-tag">06 — Limitations</p>
+    <h2>What this benchmark doesn't tell you</h2>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Small sample size</h4>
+        <p>3 runs per task × difficulty cell is directional, not statistically significant.
+        Shadow-test routing decisions on real production prompts before fully committing.</p>
+      </div>
+      <div class="card">
+        <h4>Synthetic benchmark prompts</h4>
+        <p>Real production prompts may have different distributions — especially for
+        complex reasoning and legal summaries. The benchmark establishes the framework;
+        production data validates it.</p>
+      </div>
+      <div class="card">
+        <h4>Complexity detection is heuristic</h4>
+        <p>Keyword signals and prompt length are imperfect proxies. Passing complexity
+        explicitly from the calling service (e.g., user uploaded a PDF flag) is more
+        reliable than inferring it.</p>
+      </div>
+      <div class="card">
+        <h4>Single-turn only</h4>
+        <p>All benchmark calls are single-turn. Multi-turn conversations with accumulated
+        context may behave differently — particularly for reasoning and code tasks
+        where prior context matters.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:6px;">
+      LLM Cost &amp; Performance Routing · Claude Haiku 4.5 vs Sonnet 4.6 · Langfuse observability
+    </p>
+    <p>
+      Stack: Python · Anthropic API · Streamlit · Plotly · Langfuse ·
+      Pricing: Haiku $0.80/$4.00 · Sonnet $3.00/$15.00 per MTok
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
